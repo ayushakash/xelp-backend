@@ -7,6 +7,7 @@ const app=express();
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 var cors = require('cors');
+
 app.use(cors());
 
 
@@ -14,19 +15,39 @@ app.use(cors());
 
 app.post('/signup',async(req,res)=>{
     console.log("Request body: ", req.body)
+    // let data = req.body
 
-    let data = req.body
-    
-
-    const xelp_data = new customerData(req.body);
-    
+    const xelp_data = new customerData(req.body);    
 
     try {
+        let foundUser = await customerData.findOne({ email: req.body.email })
+        console.log({ foundUser })
+
+        if (!foundUser) {
+            // register the user
+            
+            let user = await xelp_data.save();       
+            console.log('user saved sucessfully', user);
+            res.status(200).send({
+                success: true,
+                message: "User registered successfully",
+                statusCode: 200
+            })
+        } else {
+            // user already exists
+            console.log("user already exists")
+            res.status(401).send({
+                success: false,
+                message: "User already exists",
+                statusCode: 401
+            })
+        }
         
         await xelp_data.save();       
         console.log('user saved sucessfully');
         
     } catch (error) {
+        console.log(error)
         res.status(400)
         res.send('Data Not updated Please enter correct data');
     }
@@ -34,31 +55,39 @@ app.post('/signup',async(req,res)=>{
 
 })
 
-app.post('/login',async(req,res)=>{
+app.post('/login' ,async( req,res) => {
 
     console.log(req.body);
-    customerData.find({email:req.body.email}, function(err, data){
-        
+    console.log("Email: ", req.body.email)
+    console.log("Password: ", req.body.password)
 
-        
-        console.log(data[0].password)
-        
-        
-        if(req.body.password ===data[0].password){
+    let response = await customerData.findOne({ email: req.body.email });
+    console.log("Response: ", response, typeof response)
 
-            res.send("1");
-
-        }
-        else{
-
-            res.send("0");
-        }
-        
-
-        
-    });
+    if (!response) {
+        // console.log("Email address is not found in the database")
+        res.status(404).send({
+            success: false,
+            message: "Email address is not found in the database",
+            statusCode: 404
+        })
+        return
+    }
 
 
+    if (response.password != req.body.password) {
+        res.status(401).send({
+            success: false,
+            message: "Password is not matching",
+            statusCode: 401
+        })
+    } else {
+        res.status(200).send({
+            success: true,
+            message: "Email and password matching",
+            statusCode: 200
+        })
+    }
 })
 
 
