@@ -42,9 +42,7 @@ app.post('/signup',async(req,res)=>{
                 statusCode: 401
             })
         }
-        
-        await xelp_data.save();       
-        console.log('user saved sucessfully');
+    
         
     } catch (error) {
         console.log(error)
